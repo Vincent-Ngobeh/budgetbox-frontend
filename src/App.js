@@ -16,6 +16,7 @@ import Login from './pages/Login';
 import Register from './pages/Register';
 import Dashboard from './pages/Dashboard';
 import Accounts from './pages/Accounts';
+import Transactions from './pages/Transactions';
 
 // Create theme with additional color definitions
 const theme = createTheme({
@@ -71,7 +72,7 @@ function App() {
                   }
                 />
                 
-                {/* Accounts Route - Now Active */}
+                {/* Accounts Route - Phase 1 Complete */}
                 <Route
                   path="/accounts"
                   element={
@@ -81,15 +82,17 @@ function App() {
                   }
                 />
                 
-                {/* Placeholder routes for upcoming phases */}
+                {/* Transactions Route - Phase 2 Complete */}
                 <Route
                   path="/transactions"
                   element={
                     <PrivateRoute>
-                      <div style={{ padding: 20 }}>Transactions - Coming in Phase 2</div>
+                      <Transactions />
                     </PrivateRoute>
                   }
                 />
+                
+                {/* Placeholder routes for upcoming phases */}
                 <Route
                   path="/budgets"
                   element={
