@@ -15,6 +15,7 @@ import PrivateRoute from './components/Layout/PrivateRoute';
 import Login from './pages/Login';
 import Register from './pages/Register';
 import Dashboard from './pages/Dashboard';
+import Accounts from './pages/Accounts';
 
 // Create theme with additional color definitions
 const theme = createTheme({
@@ -38,6 +39,10 @@ const theme = createTheme({
     info: {
       main: '#0288d1',
       lighter: '#E1F5FE',
+    },
+    warning: {
+      main: '#ed6c02',
+      lighter: '#FFF4E5',
     },
   },
 });
@@ -66,15 +71,17 @@ function App() {
                   }
                 />
                 
-                {/* Placeholder routes for Phase 2 */}
+                {/* Accounts Route - Now Active */}
                 <Route
                   path="/accounts"
                   element={
                     <PrivateRoute>
-                      <div style={{ padding: 20 }}>Accounts - Coming in Phase 2</div>
+                      <Accounts />
                     </PrivateRoute>
                   }
                 />
+                
+                {/* Placeholder routes for upcoming phases */}
                 <Route
                   path="/transactions"
                   element={
