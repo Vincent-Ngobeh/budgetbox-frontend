@@ -18,6 +18,8 @@ import Dashboard from './pages/Dashboard';
 import Accounts from './pages/Accounts';
 import Transactions from './pages/Transactions';
 import Categories from './pages/Categories';
+import Budgets from './pages/Budgets';
+
 
 // Create theme with additional color definitions
 const theme = createTheme({
@@ -93,15 +95,7 @@ function App() {
                   }
                 />
                 
-                {/* Placeholder routes for upcoming phases */}
-                <Route
-                  path="/budgets"
-                  element={
-                    <PrivateRoute>
-                      <div style={{ padding: 20 }}>Budgets - Coming in Phase 3</div>
-                    </PrivateRoute>
-                  }
-                />
+                {/* Categories Route - Phase 3 Complete */}
                 <Route
                   path="/categories"
                   element={
@@ -110,11 +104,23 @@ function App() {
                     </PrivateRoute>
                   }
                 />
+                
+                {/* Budgets Route - Phase 3 Complete */}
+                <Route
+                  path="/budgets"
+                  element={
+                    <PrivateRoute>
+                      <Budgets />
+                    </PrivateRoute>
+                  }
+                />
+                
+                {/* Profile Route - Phase 3 (To be completed) */}
                 <Route
                   path="/profile"
                   element={
                     <PrivateRoute>
-                      <div style={{ padding: 20 }}>Profile - Coming soon</div>
+                      <Profile />
                     </PrivateRoute>
                   }
                 />
