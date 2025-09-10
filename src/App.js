@@ -17,6 +17,7 @@ import Register from './pages/Register';
 import Dashboard from './pages/Dashboard';
 import Accounts from './pages/Accounts';
 import Transactions from './pages/Transactions';
+import Categories from './pages/Categories';
 
 // Create theme with additional color definitions
 const theme = createTheme({
@@ -105,7 +106,7 @@ function App() {
                   path="/categories"
                   element={
                     <PrivateRoute>
-                      <div style={{ padding: 20 }}>Categories - Coming in Phase 3</div>
+                      <Categories />
                     </PrivateRoute>
                   }
                 />
