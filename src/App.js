@@ -19,7 +19,7 @@ import Accounts from './pages/Accounts';
 import Transactions from './pages/Transactions';
 import Categories from './pages/Categories';
 import Budgets from './pages/Budgets';
-
+import Profile from './pages/Profile';
 
 // Create theme with additional color definitions
 const theme = createTheme({
