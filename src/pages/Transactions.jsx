@@ -1,4 +1,5 @@
-import React, { useState, useEffect, useCallback } from 'react';
+// Import React hooks and Material-UI components
+import React, { useState, useEffect } from 'react';
 import {
   Container,
   Box,
@@ -16,6 +17,13 @@ import {
   TextField,
   MenuItem,
   InputAdornment,
+  useTheme,
+  useMediaQuery,
+  Checkbox,
+  CardActions,
+  Collapse,
+  Stack,
+  Pagination,
 } from '@mui/material';
 import {
   Add as AddIcon,
@@ -29,12 +37,13 @@ import {
   Clear,
   Download,
   Category as CategoryIcon,
+  ExpandMore,
+  ExpandLess,
+  CheckBox as CheckboxIcon,
 } from '@mui/icons-material';
 import { DataGrid } from '@mui/x-data-grid';
-import { DatePicker } from '@mui/x-date-pickers/DatePicker';
-import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
-import { AdapterDateFns } from '@mui/x-date-pickers/AdapterDateFns';
-import enGB from 'date-fns/locale/en-GB';
+
+// Import services and utilities
 import transactionService from '../services/transactionService';
 import accountService from '../services/accountService';
 import categoryService from '../services/categoryService';
@@ -44,7 +53,11 @@ import ConfirmDialog from '../components/common/ConfirmDialog';
 import BulkCategorizeDialog from '../components/transactions/BulkCategorizeDialog';
 
 const Transactions = () => {
-  // Main data states
+  // Theme and responsive breakpoints
+  const theme = useTheme();
+  const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
+  
+  // Data state management
   const [transactions, setTransactions] = useState([]);
   const [accounts, setAccounts] = useState([]);
   const [categories, setCategories] = useState([]);
@@ -53,12 +66,12 @@ const Transactions = () => {
   const [error, setError] = useState(null);
   const [successMessage, setSuccessMessage] = useState('');
   
-  // Pagination states
+  // Pagination state
   const [page, setPage] = useState(0);
   const [pageSize, setPageSize] = useState(20);
   const [totalCount, setTotalCount] = useState(0);
   
-  // Filter states
+  // Filter state with default values
   const [filters, setFilters] = useState({
     bank_account: '',
     category: '',
@@ -70,7 +83,7 @@ const Transactions = () => {
     search: '',
   });
   
-  // Dialog states
+  // Dialog and UI state management
   const [formDialogOpen, setFormDialogOpen] = useState(false);
   const [confirmDialogOpen, setConfirmDialogOpen] = useState(false);
   const [bulkCategorizeOpen, setBulkCategorizeOpen] = useState(false);
@@ -78,47 +91,57 @@ const Transactions = () => {
   const [transactionToDelete, setTransactionToDelete] = useState(null);
   const [selectedTransactions, setSelectedTransactions] = useState([]);
   
-  // Fetch initial data
+  // Mobile UI state
+  const [expandedCards, setExpandedCards] = useState({});
+  const [showFilters, setShowFilters] = useState(false);
+  
+  // Load initial data on component mount
   useEffect(() => {
     fetchInitialData();
   }, []);
   
   // Fetch transactions when filters or pagination changes
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   useEffect(() => {
     fetchTransactions();
   }, [filters, page, pageSize]);
 
+  /**
+   * Fetches accounts and categories data on initial load
+   */
   const fetchInitialData = async () => {
     try {
       setLoading(true);
-      // Fetch accounts and categories for dropdowns
       const [accountsRes, categoriesRes] = await Promise.all([
         accountService.getAccounts(),
         categoryService.getCategories(),
       ]);
       
+      // Handle both array and paginated response formats
       setAccounts(Array.isArray(accountsRes) ? accountsRes : accountsRes.results || []);
       setCategories(Array.isArray(categoriesRes) ? categoriesRes : categoriesRes.results || []);
     } catch (err) {
-      console.error('Error fetching initial data:', err);
       setError('Failed to load initial data');
     } finally {
       setLoading(false);
     }
   };
 
+  /**
+   * Fetches transactions and statistics based on current filters and pagination
+   */
   const fetchTransactions = async () => {
     try {
       setLoading(true);
       setError(null);
       
-      // Build query params, filtering out empty values
+      // Build query parameters
       const params = {
         page: page + 1, // API uses 1-based pagination
         page_size: pageSize,
       };
       
-      // Add filters only if they have values
+      // Add active filters to params
       Object.keys(filters).forEach(key => {
         if (filters[key] !== '' && filters[key] !== null) {
           if (key === 'search') {
@@ -129,7 +152,7 @@ const Transactions = () => {
         }
       });
       
-      // Fetch transactions and statistics in parallel
+      // Fetch both transactions and statistics in parallel
       const [transRes, statsRes] = await Promise.all([
         transactionService.getTransactions(params),
         transactionService.getStatistics({
@@ -138,7 +161,7 @@ const Transactions = () => {
         }),
       ]);
       
-      // Handle paginated response
+      // Handle paginated or array response
       if (transRes.results) {
         setTransactions(transRes.results);
         setTotalCount(transRes.count || 0);
@@ -149,18 +172,23 @@ const Transactions = () => {
       
       setStatistics(statsRes);
     } catch (err) {
-      console.error('Error fetching transactions:', err);
       setError('Failed to load transactions');
     } finally {
       setLoading(false);
     }
   };
 
+  /**
+   * Updates filter state and resets pagination
+   */
   const handleFilterChange = (field, value) => {
     setFilters(prev => ({ ...prev, [field]: value }));
     setPage(0); // Reset to first page when filters change
   };
 
+  /**
+   * Resets all filters to default values
+   */
   const handleClearFilters = () => {
     setFilters({
       bank_account: '',
@@ -175,21 +203,33 @@ const Transactions = () => {
     setPage(0);
   };
 
+  /**
+   * Opens the transaction form dialog for creating a new transaction
+   */
   const handleAddTransaction = () => {
     setSelectedTransaction(null);
     setFormDialogOpen(true);
   };
 
+  /**
+   * Opens the transaction form dialog for editing an existing transaction
+   */
   const handleEditTransaction = (transaction) => {
     setSelectedTransaction(transaction);
     setFormDialogOpen(true);
   };
 
+  /**
+   * Opens confirmation dialog for transaction deletion
+   */
   const handleDeleteClick = (transaction) => {
     setTransactionToDelete(transaction);
     setConfirmDialogOpen(true);
   };
 
+  /**
+   * Confirms and executes transaction deletion
+   */
   const handleDeleteConfirm = async () => {
     if (!transactionToDelete) return;
 
@@ -205,6 +245,9 @@ const Transactions = () => {
     }
   };
 
+  /**
+   * Duplicates a transaction with today's date
+   */
   const handleDuplicate = async (transaction) => {
     try {
       await transactionService.duplicateTransaction(
@@ -218,6 +261,9 @@ const Transactions = () => {
     }
   };
 
+  /**
+   * Handles form submission for creating or updating transactions
+   */
   const handleFormSubmit = async (formData) => {
     try {
       if (selectedTransaction) {
@@ -238,6 +284,9 @@ const Transactions = () => {
     }
   };
 
+  /**
+   * Opens bulk categorization dialog
+   */
   const handleBulkCategorize = () => {
     if (selectedTransactions.length === 0) {
       setError('Please select transactions to categorize');
@@ -246,6 +295,9 @@ const Transactions = () => {
     setBulkCategorizeOpen(true);
   };
 
+  /**
+   * Applies category to all selected transactions
+   */
   const handleBulkCategorizeSubmit = async (categoryId) => {
     try {
       await transactionService.bulkCategorize(selectedTransactions, categoryId);
@@ -258,8 +310,10 @@ const Transactions = () => {
     }
   };
 
+  /**
+   * Exports transactions to CSV file
+   */
   const handleExport = () => {
-    // Create CSV export of current view
     const csvContent = [
       ['Date', 'Description', 'Category', 'Account', 'Type', 'Amount'],
       ...transactions.map(t => [
@@ -281,7 +335,162 @@ const Transactions = () => {
     window.URL.revokeObjectURL(url);
   };
 
-  // DataGrid columns
+  /**
+   * Toggles expanded state for mobile transaction cards
+   */
+  const toggleCardExpansion = (transactionId) => {
+    setExpandedCards(prev => ({
+      ...prev,
+      [transactionId]: !prev[transactionId]
+    }));
+  };
+
+  /**
+   * Handles selection/deselection of individual transactions
+   */
+  const handleSelectTransaction = (transactionId) => {
+    setSelectedTransactions(prev => {
+      if (prev.includes(transactionId)) {
+        return prev.filter(id => id !== transactionId);
+      } else {
+        return [...prev, transactionId];
+      }
+    });
+  };
+
+  /**
+   * Checks if a transaction is currently selected
+   */
+  const isTransactionSelected = (transactionId) => {
+    return selectedTransactions.includes(transactionId);
+  };
+
+  /**
+   * Mobile-optimized transaction card component
+   */
+  const MobileTransactionCard = ({ transaction }) => {
+    const isExpanded = expandedCards[transaction.transaction_id];
+    const isSelected = isTransactionSelected(transaction.transaction_id);
+    
+    // Helper function to get icon based on transaction type
+    const getTypeIcon = (type) => {
+      switch(type) {
+        case 'income': return <TrendingUp />;
+        case 'expense': return <TrendingDown />;
+        case 'transfer': return <SwapHoriz />;
+        default: return null;
+      }
+    };
+    
+    // Helper function to get color based on transaction type
+    const getTypeColor = (type) => {
+      switch(type) {
+        case 'income': return 'success';
+        case 'expense': return 'error';
+        case 'transfer': return 'info';
+        default: return 'default';
+      }
+    };
+    
+    return (
+      <Card 
+        sx={{ 
+          mb: 1,
+          backgroundColor: isSelected ? 'action.selected' : 'background.paper'
+        }}
+      >
+        <CardContent sx={{ pb: 1 }}>
+          <Box display="flex" justifyContent="space-between" alignItems="flex-start">
+            {/* Left side: Checkbox and description */}
+            <Box display="flex" alignItems="flex-start" gap={1}>
+              <Checkbox
+                size="small"
+                checked={isSelected}
+                onChange={() => handleSelectTransaction(transaction.transaction_id)}
+              />
+              <Box>
+                <Typography variant="body1" fontWeight="medium">
+                  {transaction.transaction_description}
+                </Typography>
+                <Typography variant="caption" color="text.secondary">
+                  {formatDate(transaction.transaction_date)} • {transaction.account_name}
+                </Typography>
+              </Box>
+            </Box>
+            {/* Right side: Amount and type */}
+            <Box textAlign="right">
+              <Typography 
+                variant="h6" 
+                color={transaction.transaction_amount >= 0 ? 'success.main' : 'error.main'}
+                fontWeight="bold"
+              >
+                {transaction.transaction_amount >= 0 ? '+' : ''}{formatCurrency(Math.abs(transaction.transaction_amount))}
+              </Typography>
+              <Chip
+                size="small"
+                icon={getTypeIcon(transaction.transaction_type)}
+                label={transaction.transaction_type}
+                color={getTypeColor(transaction.transaction_type)}
+                variant="outlined"
+              />
+            </Box>
+          </Box>
+          
+          {/* Category and expand button */}
+          <Box display="flex" gap={1} mt={1} alignItems="center">
+            <Chip 
+              size="small" 
+              label={transaction.category_name}
+              icon={<CategoryIcon />}
+              variant="outlined"
+            />
+            {transaction.is_recurring && (
+              <Chip size="small" label="Recurring" color="secondary" variant="outlined" />
+            )}
+            <Box flexGrow={1} />
+            <IconButton 
+              size="small" 
+              onClick={() => toggleCardExpansion(transaction.transaction_id)}
+            >
+              {isExpanded ? <ExpandLess /> : <ExpandMore />}
+            </IconButton>
+          </Box>
+        </CardContent>
+        
+        {/* Expandable actions section */}
+        <Collapse in={isExpanded}>
+          <CardActions sx={{ justifyContent: 'flex-end', pt: 0 }}>
+            <Button 
+              size="small" 
+              startIcon={<EditIcon />}
+              onClick={() => handleEditTransaction(transaction)}
+            >
+              Edit
+            </Button>
+            <Button 
+              size="small" 
+              startIcon={<DuplicateIcon />}
+              onClick={() => handleDuplicate(transaction)}
+            >
+              Duplicate
+            </Button>
+            <Button 
+              size="small" 
+              color="error"
+              startIcon={<DeleteIcon />}
+              onClick={() => handleDeleteClick(transaction)}
+            >
+              Delete
+            </Button>
+          </CardActions>
+        </Collapse>
+      </Card>
+    );
+  };
+
+  /**
+   * DataGrid column definitions for desktop view
+   */
   const columns = [
     {
       field: 'transaction_date',
@@ -403,38 +612,43 @@ const Transactions = () => {
     },
   ];
 
-  // Summary cards
+  /**
+   * Summary card component for displaying statistics
+   */
   const SummaryCard = ({ title, value, icon, color, prefix = '£' }) => (
     <Card sx={{ height: '100%' }}>
-      <CardContent>
+      <CardContent sx={{ p: isMobile ? 1.5 : 2 }}>
         <Box display="flex" alignItems="center" justifyContent="space-between">
           <Box>
-            <Typography variant="body2" color="text.secondary" gutterBottom>
+            <Typography variant="body2" color="text.secondary" gutterBottom sx={{ fontSize: isMobile ? '0.75rem' : '0.875rem' }}>
               {title}
             </Typography>
-            <Typography variant="h5" fontWeight="bold" color={`${color}.main`}>
+            <Typography variant={isMobile ? "h6" : "h5"} fontWeight="bold" color={`${color}.main`}>
               {prefix}{Math.abs(value).toLocaleString('en-GB', { minimumFractionDigits: 2 })}
             </Typography>
           </Box>
-          <Box
-            sx={{
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              width: 48,
-              height: 48,
-              borderRadius: 1,
-              bgcolor: `${color}.lighter`,
-              color: `${color}.main`,
-            }}
-          >
-            {icon}
-          </Box>
+          {!isMobile && (
+            <Box
+              sx={{
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                width: 48,
+                height: 48,
+                borderRadius: 1,
+                bgcolor: `${color}.lighter`,
+                color: `${color}.main`,
+              }}
+            >
+              {icon}
+            </Box>
+          )}
         </Box>
       </CardContent>
     </Card>
   );
 
+  // Show loading spinner on initial load
   if (loading && transactions.length === 0) {
     return (
       <Container maxWidth="lg" sx={{ mt: 4, mb: 4 }}>
@@ -446,18 +660,58 @@ const Transactions = () => {
   }
 
   return (
-    <LocalizationProvider dateAdapter={AdapterDateFns} adapterLocale={enGB}>
-      <Container maxWidth="lg" sx={{ mt: 4, mb: 4 }}>
-        {/* Page Header */}
-        <Box display="flex" justifyContent="space-between" alignItems="center" mb={3}>
-          <Typography variant="h4" component="h1">
+    <Container maxWidth="lg" sx={{ mt: isMobile ? 2 : 4, mb: 4, px: isMobile ? 1 : 3 }}>
+      {/* Page Header */}
+      <Box mb={3}>
+        <Box display="flex" justifyContent="space-between" alignItems="center" mb={2}>
+          <Typography variant={isMobile ? "h5" : "h4"} component="h1">
             Transactions
           </Typography>
-          <Box display="flex" gap={2}>
+          {/* Desktop action buttons */}
+          {!isMobile && (
+            <Box display="flex" gap={2}>
+              <Button
+                variant="outlined"
+                startIcon={<Download />}
+                onClick={handleExport}
+              >
+                Export CSV
+              </Button>
+              <Button
+                variant="outlined"
+                startIcon={<CategoryIcon />}
+                onClick={handleBulkCategorize}
+                disabled={selectedTransactions.length === 0}
+              >
+                Bulk Categorize ({selectedTransactions.length})
+              </Button>
+              <Button
+                variant="contained"
+                startIcon={<AddIcon />}
+                onClick={handleAddTransaction}
+              >
+                Add Transaction
+              </Button>
+            </Box>
+          )}
+        </Box>
+        
+        {/* Mobile action buttons - stacked vertically */}
+        {isMobile && (
+          <Stack spacing={1}>
+            <Button
+              variant="contained"
+              startIcon={<AddIcon />}
+              onClick={handleAddTransaction}
+              fullWidth
+            >
+              Add Transaction
+            </Button>
             <Button
               variant="outlined"
               startIcon={<Download />}
               onClick={handleExport}
+              fullWidth
             >
               Export CSV
             </Button>
@@ -466,92 +720,124 @@ const Transactions = () => {
               startIcon={<CategoryIcon />}
               onClick={handleBulkCategorize}
               disabled={selectedTransactions.length === 0}
+              fullWidth
             >
               Bulk Categorize ({selectedTransactions.length})
             </Button>
-            <Button
-              variant="contained"
-              startIcon={<AddIcon />}
-              onClick={handleAddTransaction}
-            >
-              Add Transaction
-            </Button>
-          </Box>
-        </Box>
-
-        {/* Alerts */}
-        {error && (
-          <Alert severity="error" sx={{ mb: 2 }} onClose={() => setError(null)}>
-            {error}
-          </Alert>
+            {/* Select/Unselect All buttons for mobile */}
+            {selectedTransactions.length > 0 ? (
+              <Button
+                variant="outlined"
+                startIcon={<Clear />}
+                onClick={() => setSelectedTransactions([])}
+                fullWidth
+                color="secondary"
+              >
+                Unselect All ({selectedTransactions.length})
+              </Button>
+            ) : (
+              transactions.length > 0 && (
+                <Button
+                  variant="outlined"
+                  startIcon={<CheckboxIcon />}
+                  onClick={() => {
+                    const allTransactionIds = transactions.map(t => t.transaction_id);
+                    setSelectedTransactions(allTransactionIds);
+                  }}
+                  fullWidth
+                  color="primary"
+                >
+                  Select All on Page
+                </Button>
+              )
+            )}
+          </Stack>
         )}
-        {successMessage && (
-          <Alert severity="success" sx={{ mb: 2 }} onClose={() => setSuccessMessage('')}>
-            {successMessage}
-          </Alert>
-        )}
+      </Box>
 
-        {/* Summary Cards */}
-        {statistics && (
-          <Grid container spacing={3} sx={{ mb: 3 }}>
-            <Grid item xs={12} sm={6} md={3}>
-              <SummaryCard
-                title="Income"
-                value={statistics.summary?.total_income || 0}
-                icon={<TrendingUp />}
-                color="success"
-              />
-            </Grid>
-            <Grid item xs={12} sm={6} md={3}>
-              <SummaryCard
-                title="Expenses"
-                value={statistics.summary?.total_expenses || 0}
-                icon={<TrendingDown />}
-                color="error"
-              />
-            </Grid>
-            <Grid item xs={12} sm={6} md={3}>
-              <SummaryCard
-                title="Net"
-                value={statistics.summary?.net_savings || 0}
-                icon={<SwapHoriz />}
-                color={statistics.summary?.net_savings >= 0 ? 'info' : 'warning'}
-              />
-            </Grid>
-            <Grid item xs={12} sm={6} md={3}>
-              <Card sx={{ height: '100%' }}>
-                <CardContent>
-                  <Typography variant="body2" color="text.secondary" gutterBottom>
-                    Transactions
-                  </Typography>
-                  <Typography variant="h5" fontWeight="bold">
-                    {statistics.summary?.transaction_count || 0}
-                  </Typography>
-                  <Typography variant="caption" color="text.secondary">
-                    in selected period
-                  </Typography>
-                </CardContent>
-              </Card>
-            </Grid>
+      {/* Alert messages */}
+      {error && (
+        <Alert severity="error" sx={{ mb: 2 }} onClose={() => setError(null)}>
+          {error}
+        </Alert>
+      )}
+      {successMessage && (
+        <Alert severity="success" sx={{ mb: 2 }} onClose={() => setSuccessMessage('')}>
+          {successMessage}
+        </Alert>
+      )}
+
+      {/* Statistics summary cards */}
+      {statistics && (
+        <Grid container spacing={isMobile ? 1 : 3} sx={{ mb: 3 }}>
+          <Grid item xs={6} sm={6} md={3}>
+            <SummaryCard
+              title="Income"
+              value={statistics.summary?.total_income || 0}
+              icon={<TrendingUp />}
+              color="success"
+            />
           </Grid>
-        )}
+          <Grid item xs={6} sm={6} md={3}>
+            <SummaryCard
+              title="Expenses"
+              value={statistics.summary?.total_expenses || 0}
+              icon={<TrendingDown />}
+              color="error"
+            />
+          </Grid>
+          <Grid item xs={6} sm={6} md={3}>
+            <SummaryCard
+              title="Net"
+              value={statistics.summary?.net_savings || 0}
+              icon={<SwapHoriz />}
+              color={statistics.summary?.net_savings >= 0 ? 'info' : 'warning'}
+            />
+          </Grid>
+          <Grid item xs={6} sm={6} md={3}>
+            <Card sx={{ height: '100%' }}>
+              <CardContent sx={{ p: isMobile ? 1.5 : 2 }}>
+                <Typography variant="body2" color="text.secondary" gutterBottom sx={{ fontSize: isMobile ? '0.75rem' : '0.875rem' }}>
+                  Transactions
+                </Typography>
+                <Typography variant={isMobile ? "h6" : "h5"} fontWeight="bold">
+                  {statistics.summary?.transaction_count || 0}
+                </Typography>
+                <Typography variant="caption" color="text.secondary">
+                  in period
+                </Typography>
+              </CardContent>
+            </Card>
+          </Grid>
+        </Grid>
+      )}
 
-        {/* Filters */}
-        <Paper sx={{ p: 2, mb: 3 }}>
-          <Box display="flex" alignItems="center" mb={2}>
-            <FilterList sx={{ mr: 1 }} />
-            <Typography variant="h6">Filters</Typography>
-            <Box flexGrow={1} />
+      {/* Filters section */}
+      <Paper sx={{ p: isMobile ? 1 : 2, mb: 3 }}>
+        <Box display="flex" alignItems="center" mb={2}>
+          <FilterList sx={{ mr: 1 }} />
+          <Typography variant={isMobile ? "body1" : "h6"}>Filters</Typography>
+          <Box flexGrow={1} />
+          {isMobile && (
             <Button
               size="small"
-              startIcon={<Clear />}
-              onClick={handleClearFilters}
+              onClick={() => setShowFilters(!showFilters)}
             >
-              Clear Filters
+              {showFilters ? 'Hide' : 'Show'}
             </Button>
-          </Box>
-          
-          <Grid container spacing={2}>
+          )}
+          <Button
+            size="small"
+            startIcon={<Clear />}
+            onClick={handleClearFilters}
+          >
+            Clear
+          </Button>
+        </Box>
+        
+        {/* Collapsible filter fields */}
+        <Collapse in={!isMobile || showFilters}>
+          <Grid container spacing={isMobile ? 1 : 2}>
             <Grid item xs={12} sm={6} md={3}>
               <TextField
                 fullWidth
@@ -675,65 +961,98 @@ const Transactions = () => {
               </TextField>
             </Grid>
           </Grid>
+        </Collapse>
+      </Paper>
+
+      {/* Transactions display - Mobile cards or Desktop DataGrid */}
+      {isMobile ? (
+        <>
+          {/* Mobile view: Card-based layout */}
+          <Box>
+            {transactions.map(transaction => (
+              <MobileTransactionCard 
+                key={transaction.transaction_id} 
+                transaction={transaction}
+              />
+            ))}
+          </Box>
+          
+          {/* Mobile pagination */}
+          <Box display="flex" justifyContent="center" mt={2}>
+            <Pagination
+              count={Math.ceil(totalCount / pageSize)}
+              page={page + 1}
+              onChange={(e, value) => setPage(value - 1)}
+              color="primary"
+              size="small"
+            />
+          </Box>
+        </>
+      ) : (
+        /* Desktop view: DataGrid */
+        <Paper sx={{ width: '100%', overflow: 'hidden' }}>
+          <Box sx={{ height: 600, width: '100%' }}>
+            <DataGrid
+              rows={transactions}
+              columns={columns}
+              getRowId={(row) => row.transaction_id}
+              rowCount={totalCount}
+              loading={loading}
+              pageSizeOptions={[10, 20, 50]}
+              paginationModel={{ page, pageSize }}
+              paginationMode="server"
+              onPaginationModelChange={(model) => {
+                setPage(model.page);
+                setPageSize(model.pageSize);
+              }}
+              checkboxSelection
+              rowSelectionModel={selectedTransactions} // Syncs selection with mobile view
+              onRowSelectionModelChange={(newSelection) => {
+                setSelectedTransactions(newSelection);
+              }}
+              disableColumnMenu
+              sx={{
+                '& .MuiDataGrid-cell:hover': {
+                  color: 'primary.main',
+                },
+                border: 'none',
+              }}
+            />
+          </Box>
         </Paper>
+      )}
 
-        {/* Transactions Table */}
-        <Paper sx={{ height: 600, width: '100%' }}>
-          <DataGrid
-            rows={transactions}
-            columns={columns}
-            getRowId={(row) => row.transaction_id}
-            rowCount={totalCount}
-            loading={loading}
-            pageSizeOptions={[10, 20, 50]}
-            paginationModel={{ page, pageSize }}
-            paginationMode="server"
-            onPaginationModelChange={(model) => {
-              setPage(model.page);
-              setPageSize(model.pageSize);
-            }}
-            checkboxSelection
-            onRowSelectionModelChange={(newSelection) => {
-              setSelectedTransactions(newSelection);
-            }}
-            sx={{
-              '& .MuiDataGrid-cell:hover': {
-                color: 'primary.main',
-              },
-            }}
-          />
-        </Paper>
+      {/* Dialog Components */}
+      {/* Transaction form dialog for create/edit */}
+      <TransactionFormDialog
+        open={formDialogOpen}
+        onClose={() => setFormDialogOpen(false)}
+        onSubmit={handleFormSubmit}
+        transaction={selectedTransaction}
+        accounts={accounts}
+        categories={categories}
+      />
 
-        {/* Form Dialog */}
-        <TransactionFormDialog
-          open={formDialogOpen}
-          onClose={() => setFormDialogOpen(false)}
-          onSubmit={handleFormSubmit}
-          transaction={selectedTransaction}
-          accounts={accounts}
-          categories={categories}
-        />
+      {/* Confirmation dialog for deletion */}
+      <ConfirmDialog
+        open={confirmDialogOpen}
+        onClose={() => setConfirmDialogOpen(false)}
+        onConfirm={handleDeleteConfirm}
+        title="Delete Transaction"
+        message={`Are you sure you want to delete this transaction? This will update the account balance.`}
+      />
 
-        {/* Confirm Delete Dialog */}
-        <ConfirmDialog
-          open={confirmDialogOpen}
-          onClose={() => setConfirmDialogOpen(false)}
-          onConfirm={handleDeleteConfirm}
-          title="Delete Transaction"
-          message={`Are you sure you want to delete this transaction? This will update the account balance.`}
-        />
-
-        {/* Bulk Categorize Dialog */}
-        <BulkCategorizeDialog
-          open={bulkCategorizeOpen}
-          onClose={() => setBulkCategorizeOpen(false)}
-          onSubmit={handleBulkCategorizeSubmit}
-          categories={categories}
-          transactionCount={selectedTransactions.length}
-        />
-      </Container>
-    </LocalizationProvider>
+      {/* Bulk categorization dialog */}
+      <BulkCategorizeDialog
+        open={bulkCategorizeOpen}
+        onClose={() => setBulkCategorizeOpen(false)}
+        onSubmit={handleBulkCategorizeSubmit}
+        categories={categories}
+        transactionCount={selectedTransactions.length}
+      />
+    </Container>
   );
 };
 
 export default Transactions;
+                
