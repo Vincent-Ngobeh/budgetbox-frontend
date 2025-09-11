@@ -75,7 +75,7 @@ function App() {
                   }
                 />
                 
-                {/* Accounts Route - Phase 1 Complete */}
+                {/* Accounts Route */}
                 <Route
                   path="/accounts"
                   element={
@@ -85,7 +85,7 @@ function App() {
                   }
                 />
                 
-                {/* Transactions Route - Phase 2 Complete */}
+                {/* Transactions Route */}
                 <Route
                   path="/transactions"
                   element={
@@ -95,7 +95,7 @@ function App() {
                   }
                 />
                 
-                {/* Categories Route - Phase 3 Complete */}
+                {/* Categories Route */}
                 <Route
                   path="/categories"
                   element={
@@ -105,7 +105,7 @@ function App() {
                   }
                 />
                 
-                {/* Budgets Route - Phase 3 Complete */}
+                {/* Budgets Route */}
                 <Route
                   path="/budgets"
                   element={
@@ -115,7 +115,7 @@ function App() {
                   }
                 />
                 
-                {/* Profile Route - Phase 3 (To be completed) */}
+                {/* Profile Route */}
                 <Route
                   path="/profile"
                   element={
