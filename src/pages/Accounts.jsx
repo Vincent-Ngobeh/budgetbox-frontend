@@ -15,6 +15,12 @@ import {
   CardContent,
   TextField,
   MenuItem,
+  useTheme,
+  useMediaQuery,
+  CardActions,
+  Collapse,
+  Stack,
+  Divider,
 } from '@mui/material';
 import {
   Add as AddIcon,
@@ -26,6 +32,8 @@ import {
   Block,
   CheckCircle,
   Refresh,
+  ExpandMore,
+  ExpandLess,
 } from '@mui/icons-material';
 import { DataGrid } from '@mui/x-data-grid';
 import accountService from '../services/accountService';
@@ -34,20 +42,23 @@ import AccountFormDialog from '../components/accounts/AccountFormDialog';
 import ConfirmDialog from '../components/common/ConfirmDialog';
 
 const Accounts = () => {
+  const theme = useTheme();
+  const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
+  
   const [accounts, setAccounts] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [successMessage, setSuccessMessage] = useState('');
   
-  // Dialog states
   const [formDialogOpen, setFormDialogOpen] = useState(false);
   const [confirmDialogOpen, setConfirmDialogOpen] = useState(false);
   const [selectedAccount, setSelectedAccount] = useState(null);
   const [accountToDelete, setAccountToDelete] = useState(null);
   
-  // Filter states
   const [filterType, setFilterType] = useState('all');
   const [filterStatus, setFilterStatus] = useState('active');
+  
+  const [expandedCards, setExpandedCards] = useState({});
 
   useEffect(() => {
     fetchAccounts();
@@ -59,7 +70,6 @@ const Accounts = () => {
       setError(null);
       const response = await accountService.getAccounts();
       
-      // Transform the data for DataGrid
       const transformedAccounts = response.results ? response.results : response;
       setAccounts(Array.isArray(transformedAccounts) ? transformedAccounts : []);
     } catch (err) {
@@ -107,11 +117,9 @@ const Accounts = () => {
   const handleFormSubmit = async (formData) => {
     try {
       if (selectedAccount) {
-        // Update existing account
         await accountService.updateAccount(selectedAccount.bank_account_id, formData);
         setSuccessMessage('Account updated successfully');
       } else {
-        // Create new account
         await accountService.createAccount(formData);
         setSuccessMessage('Account created successfully');
       }
@@ -119,7 +127,7 @@ const Accounts = () => {
       setFormDialogOpen(false);
       fetchAccounts();
     } catch (err) {
-      throw err; // Let the form dialog handle the error
+      throw err;
     }
   };
 
@@ -133,7 +141,13 @@ const Accounts = () => {
     }
   };
 
-  // Filter accounts based on selected filters
+  const toggleCardExpansion = (accountId) => {
+    setExpandedCards(prev => ({
+      ...prev,
+      [accountId]: !prev[accountId]
+    }));
+  };
+
   const filteredAccounts = accounts.filter(account => {
     if (filterType !== 'all' && account.account_type !== filterType) return false;
     if (filterStatus === 'active' && !account.is_active) return false;
@@ -141,7 +155,6 @@ const Accounts = () => {
     return true;
   });
 
-  // Calculate totals by account type
   const accountTotals = filteredAccounts.reduce((acc, account) => {
     const type = account.account_type;
     if (!acc[type]) {
@@ -152,7 +165,97 @@ const Accounts = () => {
     return acc;
   }, {});
 
-  // DataGrid columns
+  const MobileAccountCard = ({ account }) => {
+    const isExpanded = expandedCards[account.bank_account_id];
+    
+    return (
+      <Card sx={{ mb: 2 }}>
+        <CardContent>
+          <Box display="flex" justifyContent="space-between" alignItems="flex-start" mb={1}>
+            <Box>
+              <Typography variant="h6" component="div">
+                {account.account_name}
+              </Typography>
+              <Typography variant="body2" color="text.secondary">
+                {account.bank_name}
+              </Typography>
+              <Typography variant="caption" color="text.secondary" sx={{ fontFamily: 'monospace' }}>
+                {account.account_number_masked}
+              </Typography>
+            </Box>
+            <Box textAlign="right">
+              <Typography 
+                variant="h5" 
+                sx={{ 
+                  fontWeight: 'bold',
+                  color: account.current_balance >= 0 ? 'success.main' : 'error.main',
+                  mb: 0.5
+                }}
+              >
+                {formatCurrency(account.current_balance)}
+              </Typography>
+              <Chip
+                label={formatAccountType(account.account_type)}
+                size="small"
+                color={account.account_type === 'credit' ? 'error' : 'primary'}
+                variant="outlined"
+              />
+            </Box>
+          </Box>
+          
+          <Box display="flex" alignItems="center" justifyContent="space-between">
+            <Chip
+              icon={account.is_active ? <CheckCircle /> : <Block />}
+              label={account.is_active ? 'Active' : 'Inactive'}
+              size="small"
+              color={account.is_active ? 'success' : 'default'}
+              variant="outlined"
+            />
+            <IconButton 
+              size="small" 
+              onClick={() => toggleCardExpansion(account.bank_account_id)}
+            >
+              {isExpanded ? <ExpandLess /> : <ExpandMore />}
+            </IconButton>
+          </Box>
+        </CardContent>
+        
+        <Collapse in={isExpanded}>
+          <Divider />
+          <CardActions sx={{ justifyContent: 'flex-end' }}>
+            <Button 
+              size="small" 
+              startIcon={<EditIcon />}
+              onClick={() => handleEditAccount(account)}
+              disabled={!account.is_active}
+            >
+              Edit
+            </Button>
+            {account.is_active && account.current_balance === 0 && (
+              <Button 
+                size="small" 
+                color="warning"
+                startIcon={<Block />}
+                onClick={() => handleDeactivate(account)}
+              >
+                Deactivate
+              </Button>
+            )}
+            <Button 
+              size="small" 
+              color="error"
+              startIcon={<DeleteIcon />}
+              onClick={() => handleDeleteClick(account)}
+              disabled={account.transaction_count > 0}
+            >
+              Delete
+            </Button>
+          </CardActions>
+        </Collapse>
+      </Card>
+    );
+  };
+
   const columns = [
     {
       field: 'account_name',
@@ -263,28 +366,29 @@ const Accounts = () => {
     },
   ];
 
-  // Summary cards for account types
   const SummaryCard = ({ type, data, icon, color }) => (
     <Card sx={{ height: '100%' }}>
-      <CardContent>
+      <CardContent sx={{ p: isMobile ? 1.5 : 2 }}>
         <Box display="flex" alignItems="center" mb={1}>
-          <Box
-            sx={{
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              width: 40,
-              height: 40,
-              borderRadius: 1,
-              bgcolor: `${color}.lighter`,
-              color: `${color}.main`,
-              mr: 2,
-            }}
-          >
-            {icon}
-          </Box>
+          {!isMobile && (
+            <Box
+              sx={{
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                width: 40,
+                height: 40,
+                borderRadius: 1,
+                bgcolor: `${color}.lighter`,
+                color: `${color}.main`,
+                mr: 2,
+              }}
+            >
+              {icon}
+            </Box>
+          )}
           <Box flexGrow={1}>
-            <Typography variant="body2" color="text.secondary">
+            <Typography variant="body2" color="text.secondary" sx={{ fontSize: isMobile ? '0.75rem' : '0.875rem' }}>
               {formatAccountType(type)}
             </Typography>
             <Typography variant="caption" color="text.secondary">
@@ -292,7 +396,7 @@ const Accounts = () => {
             </Typography>
           </Box>
         </Box>
-        <Typography variant="h5" fontWeight="bold" color={color + '.main'}>
+        <Typography variant={isMobile ? "h6" : "h5"} fontWeight="bold" color={color + '.main'}>
           {formatCurrency(data.total)}
         </Typography>
       </CardContent>
@@ -310,17 +414,18 @@ const Accounts = () => {
   }
 
   return (
-    <Container maxWidth="lg" sx={{ mt: 4, mb: 4 }}>
+    <Container maxWidth="lg" sx={{ mt: isMobile ? 2 : 4, mb: 4, px: isMobile ? 1 : 3 }}>
       {/* Page Header */}
-      <Box display="flex" justifyContent="space-between" alignItems="center" mb={3}>
-        <Typography variant="h4" component="h1">
+      <Box display="flex" flexDirection={isMobile ? 'column' : 'row'} justifyContent="space-between" alignItems={isMobile ? 'stretch' : 'center'} mb={3} gap={2}>
+        <Typography variant={isMobile ? "h5" : "h4"} component="h1">
           Bank Accounts
         </Typography>
-        <Box display="flex" gap={2}>
+        <Box display="flex" gap={isMobile ? 1 : 2} flexDirection={isMobile ? 'column' : 'row'}>
           <Button
             variant="outlined"
             startIcon={<Refresh />}
             onClick={fetchAccounts}
+            fullWidth={isMobile}
           >
             Refresh
           </Button>
@@ -328,6 +433,7 @@ const Accounts = () => {
             variant="contained"
             startIcon={<AddIcon />}
             onClick={handleAddAccount}
+            fullWidth={isMobile}
           >
             Add Account
           </Button>
@@ -347,9 +453,9 @@ const Accounts = () => {
       )}
 
       {/* Summary Cards */}
-      <Grid container spacing={3} sx={{ mb: 3 }}>
+      <Grid container spacing={isMobile ? 1 : 3} sx={{ mb: 3 }}>
         {accountTotals.current && (
-          <Grid item xs={12} sm={6} md={3}>
+          <Grid item xs={6} sm={6} md={3}>
             <SummaryCard
               type="current"
               data={accountTotals.current}
@@ -359,7 +465,7 @@ const Accounts = () => {
           </Grid>
         )}
         {accountTotals.savings && (
-          <Grid item xs={12} sm={6} md={3}>
+          <Grid item xs={6} sm={6} md={3}>
             <SummaryCard
               type="savings"
               data={accountTotals.savings}
@@ -369,7 +475,7 @@ const Accounts = () => {
           </Grid>
         )}
         {accountTotals.credit && (
-          <Grid item xs={12} sm={6} md={3}>
+          <Grid item xs={6} sm={6} md={3}>
             <SummaryCard
               type="credit"
               data={accountTotals.credit}
@@ -379,7 +485,7 @@ const Accounts = () => {
           </Grid>
         )}
         {accountTotals.isa && (
-          <Grid item xs={12} sm={6} md={3}>
+          <Grid item xs={6} sm={6} md={3}>
             <SummaryCard
               type="isa"
               data={accountTotals.isa}
@@ -391,8 +497,8 @@ const Accounts = () => {
       </Grid>
 
       {/* Filters */}
-      <Paper sx={{ p: 2, mb: 3 }}>
-        <Grid container spacing={2} alignItems="center">
+      <Paper sx={{ p: isMobile ? 1 : 2, mb: 3 }}>
+        <Grid container spacing={isMobile ? 1 : 2} alignItems="center">
           <Grid item xs={12} sm={4} md={3}>
             <TextField
               select
@@ -426,22 +532,36 @@ const Accounts = () => {
         </Grid>
       </Paper>
 
-      {/* Accounts Table */}
-      <Paper sx={{ height: 400, width: '100%' }}>
-        <DataGrid
-          rows={filteredAccounts}
-          columns={columns}
-          getRowId={(row) => row.bank_account_id}
-          pageSize={10}
-          rowsPerPageOptions={[5, 10, 20]}
-          disableSelectionOnClick
-          sx={{
-            '& .MuiDataGrid-cell:hover': {
-              color: 'primary.main',
-            },
-          }}
-        />
-      </Paper>
+      {/* Accounts Display - Cards on mobile, DataGrid on desktop */}
+      {isMobile ? (
+        <Box>
+          {filteredAccounts.map(account => (
+            <MobileAccountCard 
+              key={account.bank_account_id} 
+              account={account}
+            />
+          ))}
+        </Box>
+      ) : (
+        <Paper sx={{ width: '100%', overflow: 'hidden' }}>
+          <Box sx={{ height: 400, width: '100%' }}>
+            <DataGrid
+              rows={filteredAccounts}
+              columns={columns}
+              getRowId={(row) => row.bank_account_id}
+              pageSize={10}
+              rowsPerPageOptions={[5, 10, 20]}
+              disableSelectionOnClick
+              sx={{
+                '& .MuiDataGrid-cell:hover': {
+                  color: 'primary.main',
+                },
+                border: 'none',
+              }}
+            />
+          </Box>
+        </Paper>
+      )}
 
       {/* Form Dialog */}
       <AccountFormDialog
