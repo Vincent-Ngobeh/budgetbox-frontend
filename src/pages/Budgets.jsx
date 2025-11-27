@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import {
   Container,
   Box,
@@ -14,8 +14,6 @@ import {
   Card,
   CardContent,
   LinearProgress,
-  TextField,
-  MenuItem,
   List,
   ListItem,
   ListItemText,
@@ -25,22 +23,18 @@ import {
 import {
   Add as AddIcon,
   Edit as EditIcon,
-  Delete as DeleteIcon,
   ContentCopy as CloneIcon,
   TrendingUp,
-  TrendingDown,
   Warning,
   CheckCircle,
   Schedule,
-  CalendarMonth,
-  AttachMoney,
   Block,
   PlayArrow,
   Refresh,
 } from '@mui/icons-material';
 import budgetService from '../services/budgetService';
 import categoryService from '../services/categoryService';
-import { formatCurrency, formatDate, formatDateForAPI, getMonthStart, getMonthEnd } from '../utils/formatters';
+import { formatCurrency, formatDate, getMonthStart } from '../utils/formatters';
 import BudgetFormDialog from '../components/budgets/BudgetFormDialog';
 import BudgetProgressDialog from '../components/budgets/BudgetProgressDialog';
 import ConfirmDialog from '../components/common/ConfirmDialog';
@@ -54,8 +48,7 @@ const Budgets = () => {
   const [activeTab, setActiveTab] = useState(0);
   
   // Filter states
-  const [filterPeriod, setFilterPeriod] = useState('current');
-  const [filterCategory, setFilterCategory] = useState('');
+  const [filterPeriod] = useState('current');
   
   // Dialog states
   const [formDialogOpen, setFormDialogOpen] = useState(false);
@@ -69,19 +62,7 @@ const Budgets = () => {
   const [overview, setOverview] = useState(null);
   const [recommendations, setRecommendations] = useState(null);
 
-  useEffect(() => {
-    fetchInitialData();
-  }, []);
-
-  useEffect(() => {
-    if (activeTab === 1) {
-      fetchOverview();
-    } else if (activeTab === 2) {
-      fetchRecommendations();
-    }
-  }, [activeTab]);
-
-  const fetchInitialData = async () => {
+  const fetchInitialData = useCallback(async () => {
     try {
       setLoading(true);
       const [budgetsRes, categoriesRes] = await Promise.all([
@@ -97,25 +78,37 @@ const Budgets = () => {
     } finally {
       setLoading(false);
     }
-  };
+  }, [filterPeriod]);
 
-  const fetchOverview = async () => {
+  const fetchOverview = useCallback(async () => {
     try {
       const data = await budgetService.getOverview();
       setOverview(data);
     } catch (err) {
       console.error('Error fetching overview:', err);
     }
-  };
+  }, []);
 
-  const fetchRecommendations = async () => {
+  const fetchRecommendations = useCallback(async () => {
     try {
       const data = await budgetService.getRecommendations();
       setRecommendations(data);
     } catch (err) {
       console.error('Error fetching recommendations:', err);
     }
-  };
+  }, []);
+
+  useEffect(() => {
+    fetchInitialData();
+  }, [fetchInitialData]);
+
+  useEffect(() => {
+    if (activeTab === 1) {
+      fetchOverview();
+    } else if (activeTab === 2) {
+      fetchRecommendations();
+    }
+  }, [activeTab, fetchOverview, fetchRecommendations]);
 
   const handleAddBudget = () => {
     setSelectedBudget(null);

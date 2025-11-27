@@ -311,6 +311,18 @@ const Transactions = () => {
   };
 
   /**
+   * Escapes a value for CSV format
+   */
+  const escapeCsvValue = (value) => {
+    if (value === null || value === undefined) return '';
+    const str = String(value);
+    if (str.includes(',') || str.includes('"') || str.includes('\n')) {
+      return `"${str.replace(/"/g, '""')}"`;
+    }
+    return str;
+  };
+
+  /**
    * Exports transactions to CSV file
    */
   const handleExport = () => {
@@ -324,7 +336,7 @@ const Transactions = () => {
         t.transaction_type,
         t.transaction_amount,
       ])
-    ].map(row => row.join(',')).join('\n');
+    ].map(row => row.map(escapeCsvValue).join(',')).join('\n');
     
     const blob = new Blob([csvContent], { type: 'text/csv' });
     const url = window.URL.createObjectURL(blob);
@@ -1055,4 +1067,3 @@ const Transactions = () => {
 };
 
 export default Transactions;
-                

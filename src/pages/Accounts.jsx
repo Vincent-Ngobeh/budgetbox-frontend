@@ -19,7 +19,6 @@ import {
   useMediaQuery,
   CardActions,
   Collapse,
-  Stack,
   Divider,
 } from '@mui/material';
 import {
@@ -37,7 +36,7 @@ import {
 } from '@mui/icons-material';
 import { DataGrid } from '@mui/x-data-grid';
 import accountService from '../services/accountService';
-import { formatCurrency, formatDate, formatAccountType } from '../utils/formatters';
+import { formatCurrency, formatAccountType } from '../utils/formatters';
 import AccountFormDialog from '../components/accounts/AccountFormDialog';
 import ConfirmDialog from '../components/common/ConfirmDialog';
 
@@ -549,9 +548,13 @@ const Accounts = () => {
               rows={filteredAccounts}
               columns={columns}
               getRowId={(row) => row.bank_account_id}
-              pageSize={10}
-              rowsPerPageOptions={[5, 10, 20]}
-              disableSelectionOnClick
+              initialState={{
+                pagination: {
+                  paginationModel: { page: 0, pageSize: 10 },
+                },
+              }}
+              pageSizeOptions={[5, 10, 20]}
+              disableRowSelectionOnClick
               sx={{
                 '& .MuiDataGrid-cell:hover': {
                   color: 'primary.main',

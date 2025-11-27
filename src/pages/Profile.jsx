@@ -44,7 +44,7 @@ import authService from '../services/authService';
 import { formatDate, formatCurrency } from '../utils/formatters';
 
 const Profile = () => {
-  const { user, updateProfile } = useAuth();
+  const { updateProfile, changePassword } = useAuth();
   const [loading, setLoading] = useState(true);
   const [profileData, setProfileData] = useState(null);
   const [isEditing, setIsEditing] = useState(false);
@@ -211,14 +211,13 @@ const Profile = () => {
     }
     
     try {
-      // Note: This would need a backend endpoint for password change
-      // For now, we'll just show the UI
-      const result = await updateProfile({
-        password: passwordData.new_password,
-      });
+      const result = await changePassword(
+        passwordData.current_password,
+        passwordData.new_password
+      );
       
       if (result.success) {
-        setSuccessMessage('Password changed successfully');
+        setSuccessMessage(result.message || 'Password changed successfully');
         setChangingPassword(false);
         setPasswordData({
           current_password: '',

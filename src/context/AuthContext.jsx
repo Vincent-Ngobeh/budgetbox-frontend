@@ -88,6 +88,21 @@ export const AuthProvider = ({ children }) => {
     }
   };
 
+  const changePassword = async (currentPassword, newPassword) => {
+    try {
+      setError(null);
+      const response = await authService.changePassword(currentPassword, newPassword);
+      // Token is automatically updated in authService
+      return { success: true, message: response.message };
+    } catch (error) {
+      const errorMessage = error.response?.data?.error ||
+                          error.response?.data?.details?.join(', ') ||
+                          'Password change failed';
+      setError(errorMessage);
+      return { success: false, error: errorMessage };
+    }
+  };
+
   const value = {
     user,
     loading,
@@ -96,6 +111,7 @@ export const AuthProvider = ({ children }) => {
     register,
     logout,
     updateProfile,
+    changePassword,
     isAuthenticated: !!user,
   };
 
