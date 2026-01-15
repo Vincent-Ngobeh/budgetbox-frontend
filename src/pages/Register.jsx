@@ -23,7 +23,7 @@ import { useAuth } from '../context/AuthContext';
 const Register = () => {
   const navigate = useNavigate();
   const { register } = useAuth();
-  
+
   const [formData, setFormData] = useState({
     username: '',
     email: '',
@@ -52,67 +52,67 @@ const Register = () => {
 
   const validateForm = () => {
     const newErrors = {};
-    
+
     // Username validation
     if (!formData.username.trim()) {
       newErrors.username = 'Username is required';
     } else if (formData.username.length < 3) {
       newErrors.username = 'Username must be at least 3 characters';
     }
-    
+
     // Email validation
     if (!formData.email.trim()) {
       newErrors.email = 'Email is required';
     } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email)) {
       newErrors.email = 'Please enter a valid email address';
     }
-    
+
     // Password validation
     if (!formData.password) {
       newErrors.password = 'Password is required';
     } else if (formData.password.length < 8) {
       newErrors.password = 'Password must be at least 8 characters';
     }
-    
+
     // Confirm password validation
     if (!formData.confirmPassword) {
       newErrors.confirmPassword = 'Please confirm your password';
     } else if (formData.password !== formData.confirmPassword) {
       newErrors.confirmPassword = 'Passwords do not match';
     }
-    
+
     // First name validation
     if (!formData.first_name.trim()) {
       newErrors.first_name = 'First name is required';
     }
-    
+
     // Last name validation
     if (!formData.last_name.trim()) {
       newErrors.last_name = 'Last name is required';
     }
-    
+
     return newErrors;
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    
+
     // Validate form
     const validationErrors = validateForm();
     if (Object.keys(validationErrors).length > 0) {
       setErrors(validationErrors);
       return;
     }
-    
+
     setLoading(true);
     setGeneralError('');
-    
+
     try {
       // Prepare data for API (exclude confirmPassword)
       const { confirmPassword, ...registrationData } = formData;
-      
+
       const result = await register(registrationData);
-      
+
       if (result.success) {
         // Registration successful, navigate to dashboard
         navigate('/dashboard');
@@ -131,24 +131,59 @@ const Register = () => {
     <Container component="main" maxWidth="sm">
       <Box
         sx={{
-          marginTop: 4,
+          marginTop: { xs: 2, sm: 4 },
           marginBottom: 4,
           display: 'flex',
           flexDirection: 'column',
           alignItems: 'center',
         }}
       >
-        <Paper elevation={3} sx={{ padding: 4, width: '100%' }}>
+        <Paper
+          elevation={0}
+          sx={{
+            padding: { xs: 3, sm: 4 },
+            width: '100%',
+            borderRadius: 4,
+            background: 'rgba(255, 255, 255, 0.07)',
+            backdropFilter: 'blur(20px)',
+            WebkitBackdropFilter: 'blur(20px)',
+            border: '1px solid rgba(255, 255, 255, 0.1)',
+          }}
+        >
           <Box
             sx={{
               display: 'flex',
               flexDirection: 'column',
               alignItems: 'center',
-              mb: 3,
+              mb: 4,
             }}
           >
-            <AccountBalanceIcon sx={{ fontSize: 40, color: 'primary.main', mb: 1 }} />
-            <Typography component="h1" variant="h5">
+            <Box
+              sx={{
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                width: 64,
+                height: 64,
+                borderRadius: 3,
+                background: 'linear-gradient(135deg, #9D4EDD 0%, #7B2CBF 100%)',
+                boxShadow: '0 8px 24px rgba(157, 78, 221, 0.4)',
+                mb: 2,
+              }}
+            >
+              <AccountBalanceIcon sx={{ fontSize: 32, color: 'white' }} />
+            </Box>
+            <Typography
+              component="h1"
+              variant="h5"
+              sx={{
+                fontWeight: 700,
+                background: 'linear-gradient(90deg, #ffffff 0%, #E0AAFF 100%)',
+                WebkitBackgroundClip: 'text',
+                WebkitTextFillColor: 'transparent',
+                backgroundClip: 'text',
+              }}
+            >
               Create Your Account
             </Typography>
             <Typography variant="body2" color="text.secondary" sx={{ mt: 1 }}>

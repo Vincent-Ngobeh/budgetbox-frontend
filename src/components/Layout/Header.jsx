@@ -75,9 +75,23 @@ const Header = () => {
 
   return (
     <>
-      <AppBar position="sticky">
-        <Toolbar>
-          <AccountBalanceIcon sx={{ display: { xs: 'none', md: 'flex' }, mr: 1 }} />
+      <AppBar position="sticky" elevation={0}>
+        <Toolbar sx={{ py: 1 }}>
+          <Box
+            sx={{
+              display: { xs: 'none', md: 'flex' },
+              alignItems: 'center',
+              justifyContent: 'center',
+              width: 40,
+              height: 40,
+              borderRadius: 2,
+              background: 'linear-gradient(135deg, #9D4EDD 0%, #7B2CBF 100%)',
+              mr: 1.5,
+              boxShadow: '0 4px 15px rgba(157, 78, 221, 0.3)',
+            }}
+          >
+            <AccountBalanceIcon sx={{ fontSize: 22, color: 'white' }} />
+          </Box>
           <Typography
             variant="h6"
             noWrap
@@ -89,6 +103,10 @@ const Header = () => {
               fontWeight: 700,
               color: 'inherit',
               textDecoration: 'none',
+              background: 'linear-gradient(90deg, #ffffff 0%, #E0AAFF 100%)',
+              WebkitBackgroundClip: 'text',
+              WebkitTextFillColor: 'transparent',
+              backgroundClip: 'text',
             }}
           >
             BudgetBox
@@ -121,28 +139,43 @@ const Header = () => {
               display: { xs: 'flex', md: 'none' },
               flexGrow: 1,
               fontWeight: 700,
-              color: 'inherit',
               textDecoration: 'none',
+              background: 'linear-gradient(90deg, #ffffff 0%, #E0AAFF 100%)',
+              WebkitBackgroundClip: 'text',
+              WebkitTextFillColor: 'transparent',
+              backgroundClip: 'text',
             }}
           >
             BudgetBox
           </Typography>
 
           {/* Desktop navigation */}
-          <Box sx={{ flexGrow: 1, display: { xs: 'none', md: 'flex' } }}>
+          <Box sx={{ flexGrow: 1, display: { xs: 'none', md: 'flex' }, gap: 0.5 }}>
             {isAuthenticated &&
               navigationItems.map((item) => (
                 <Button
                   key={item.path}
                   component={RouterLink}
                   to={item.path}
-                  sx={{ 
-                    my: 2, 
-                    color: 'white', 
-                    display: 'block',
-                    backgroundColor: location.pathname === item.path ? 'rgba(255,255,255,0.1)' : 'transparent',
+                  sx={{
+                    my: 1,
+                    px: 2.5,
+                    py: 1,
+                    color: location.pathname === item.path ? '#ffffff' : 'rgba(255,255,255,0.7)',
+                    borderRadius: 2,
+                    background: location.pathname === item.path
+                      ? 'linear-gradient(135deg, rgba(157, 78, 221, 0.3) 0%, rgba(123, 44, 191, 0.2) 100%)'
+                      : 'transparent',
+                    border: location.pathname === item.path
+                      ? '1px solid rgba(157, 78, 221, 0.3)'
+                      : '1px solid transparent',
+                    fontWeight: location.pathname === item.path ? 600 : 500,
+                    transition: 'all 0.2s ease',
                     '&:hover': {
-                      backgroundColor: 'rgba(255,255,255,0.2)',
+                      background: 'rgba(157, 78, 221, 0.2)',
+                      borderColor: 'rgba(157, 78, 221, 0.2)',
+                      color: '#ffffff',
+                      transform: 'translateY(-1px)',
                     }
                   }}
                 >
@@ -157,7 +190,17 @@ const Header = () => {
               <>
                 <Tooltip title="Account settings">
                   <IconButton onClick={handleOpenUserMenu} sx={{ p: 0 }}>
-                    <Avatar sx={{ bgcolor: 'secondary.main' }}>
+                    <Avatar
+                      sx={{
+                        width: 42,
+                        height: 42,
+                        background: 'linear-gradient(135deg, #C77DFF 0%, #9D4EDD 100%)',
+                        border: '2px solid rgba(255, 255, 255, 0.2)',
+                        boxShadow: '0 4px 15px rgba(157, 78, 221, 0.3)',
+                        fontWeight: 600,
+                        fontSize: '1rem',
+                      }}
+                    >
                       {user?.first_name?.[0] || user?.username?.[0] || 'U'}
                     </Avatar>
                   </IconButton>
@@ -193,19 +236,34 @@ const Header = () => {
                 </Menu>
               </>
             ) : (
-              <Box sx={{ display: 'flex', gap: 1 }}>
+              <Box sx={{ display: 'flex', gap: 1.5 }}>
                 <Button
                   component={RouterLink}
                   to="/login"
-                  sx={{ color: 'white' }}
+                  sx={{
+                    color: 'rgba(255,255,255,0.9)',
+                    px: 2.5,
+                    '&:hover': {
+                      color: '#ffffff',
+                      background: 'rgba(255,255,255,0.05)',
+                    }
+                  }}
                 >
                   Login
                 </Button>
                 <Button
                   component={RouterLink}
                   to="/register"
-                  variant="outlined"
-                  sx={{ color: 'white', borderColor: 'white' }}
+                  variant="contained"
+                  sx={{
+                    px: 2.5,
+                    background: 'linear-gradient(135deg, #9D4EDD 0%, #7B2CBF 100%)',
+                    boxShadow: '0 4px 15px rgba(157, 78, 221, 0.4)',
+                    '&:hover': {
+                      background: 'linear-gradient(135deg, #C77DFF 0%, #9D4EDD 100%)',
+                      boxShadow: '0 6px 20px rgba(157, 78, 221, 0.5)',
+                    }
+                  }}
                 >
                   Register
                 </Button>
@@ -222,33 +280,70 @@ const Header = () => {
         onClose={handleMobileMenuClose}
         sx={{
           display: { xs: 'block', md: 'none' },
-          '& .MuiDrawer-paper': { 
-            boxSizing: 'border-box', 
+          '& .MuiDrawer-paper': {
+            boxSizing: 'border-box',
             width: 240,
             backgroundColor: 'background.paper',
           },
         }}
       >
         <Box sx={{ p: 2, display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-          <Typography variant="h6" sx={{ fontWeight: 700 }}>
+          <Typography
+            variant="h6"
+            sx={{
+              fontWeight: 700,
+              background: 'linear-gradient(90deg, #ffffff 0%, #E0AAFF 100%)',
+              WebkitBackgroundClip: 'text',
+              WebkitTextFillColor: 'transparent',
+              backgroundClip: 'text',
+            }}
+          >
             BudgetBox
           </Typography>
-          <IconButton onClick={handleMobileMenuClose}>
+          <IconButton
+            onClick={handleMobileMenuClose}
+            sx={{
+              color: 'rgba(255,255,255,0.7)',
+              '&:hover': {
+                color: '#ffffff',
+                background: 'rgba(157, 78, 221, 0.2)',
+              }
+            }}
+          >
             <CloseIcon />
           </IconButton>
         </Box>
-        
+
         <Divider />
-        
+
         {/* User info in mobile drawer */}
         {isAuthenticated && user && (
           <>
-            <Box sx={{ p: 2, display: 'flex', alignItems: 'center', gap: 2 }}>
-              <Avatar sx={{ bgcolor: 'primary.main' }}>
+            <Box
+              sx={{
+                p: 2.5,
+                display: 'flex',
+                alignItems: 'center',
+                gap: 2,
+                background: 'rgba(157, 78, 221, 0.1)',
+                borderRadius: 2,
+                mx: 1.5,
+                my: 1,
+              }}
+            >
+              <Avatar
+                sx={{
+                  width: 48,
+                  height: 48,
+                  background: 'linear-gradient(135deg, #C77DFF 0%, #9D4EDD 100%)',
+                  border: '2px solid rgba(255, 255, 255, 0.2)',
+                  fontWeight: 600,
+                }}
+              >
                 {user?.first_name?.[0] || user?.username?.[0] || 'U'}
               </Avatar>
               <Box>
-                <Typography variant="subtitle2">
+                <Typography variant="subtitle2" sx={{ fontWeight: 600, color: '#ffffff' }}>
                   {user?.first_name} {user?.last_name}
                 </Typography>
                 <Typography variant="caption" color="text.secondary">
@@ -256,44 +351,62 @@ const Header = () => {
                 </Typography>
               </Box>
             </Box>
-            <Divider />
+            <Divider sx={{ my: 1 }} />
           </>
         )}
-        
+
         {/* Navigation items */}
         <List>
           {isAuthenticated ? (
             <>
               {navigationItems.map((item) => (
-                <ListItem key={item.path} disablePadding>
-                  <ListItemButton 
+                <ListItem key={item.path} disablePadding sx={{ px: 1 }}>
+                  <ListItemButton
                     onClick={() => handleNavigate(item.path)}
                     selected={location.pathname === item.path}
                     sx={{
+                      borderRadius: 2,
+                      mb: 0.5,
                       '&.Mui-selected': {
-                        backgroundColor: 'primary.lighter',
+                        background: 'linear-gradient(135deg, rgba(157, 78, 221, 0.25) 0%, rgba(123, 44, 191, 0.15) 100%)',
+                        border: '1px solid rgba(157, 78, 221, 0.3)',
                         '&:hover': {
-                          backgroundColor: 'primary.lighter',
+                          background: 'linear-gradient(135deg, rgba(157, 78, 221, 0.3) 0%, rgba(123, 44, 191, 0.2) 100%)',
                         }
+                      },
+                      '&:hover': {
+                        background: 'rgba(255, 255, 255, 0.05)',
                       }
                     }}
                   >
                     <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
-                      {item.icon}
-                      <ListItemText primary={item.title} />
+                      <Box
+                        sx={{
+                          color: location.pathname === item.path ? '#C77DFF' : 'rgba(255,255,255,0.6)',
+                        }}
+                      >
+                        {item.icon}
+                      </Box>
+                      <ListItemText
+                        primary={item.title}
+                        primaryTypographyProps={{
+                          fontWeight: location.pathname === item.path ? 600 : 400,
+                          color: location.pathname === item.path ? '#ffffff' : 'rgba(255,255,255,0.8)',
+                        }}
+                      />
                     </Box>
                   </ListItemButton>
                 </ListItem>
               ))}
-              
+
               <Divider sx={{ my: 1 }} />
-              
+
               <ListItem disablePadding>
                 <ListItemButton onClick={() => handleNavigate('/profile')}>
                   <ListItemText primary="Profile" />
                 </ListItemButton>
               </ListItem>
-              
+
               <ListItem disablePadding>
                 <ListItemButton onClick={handleLogout}>
                   <ListItemText primary="Logout" />

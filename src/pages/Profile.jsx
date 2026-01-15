@@ -50,7 +50,7 @@ const Profile = () => {
   const [isEditing, setIsEditing] = useState(false);
   const [error, setError] = useState(null);
   const [successMessage, setSuccessMessage] = useState('');
-  
+
   // Form states
   const [formData, setFormData] = useState({
     first_name: '',
@@ -58,7 +58,7 @@ const Profile = () => {
     email: '',
     username: '',
   });
-  
+
   // Password change states
   const [passwordData, setPasswordData] = useState({
     current_password: '',
@@ -71,7 +71,7 @@ const Profile = () => {
     confirm: false,
   });
   const [changingPassword, setChangingPassword] = useState(false);
-  
+
   const [errors, setErrors] = useState({});
 
   useEffect(() => {
@@ -114,7 +114,7 @@ const Profile = () => {
   const handleChange = (e) => {
     const { name, value } = e.target;
     setFormData(prev => ({ ...prev, [name]: value }));
-    
+
     // Clear error for this field
     if (errors[name]) {
       setErrors(prev => ({ ...prev, [name]: '' }));
@@ -124,7 +124,7 @@ const Profile = () => {
   const handlePasswordChange = (e) => {
     const { name, value } = e.target;
     setPasswordData(prev => ({ ...prev, [name]: value }));
-    
+
     // Clear error for this field
     if (errors[name]) {
       setErrors(prev => ({ ...prev, [name]: '' }));
@@ -133,62 +133,62 @@ const Profile = () => {
 
   const validateForm = () => {
     const newErrors = {};
-    
+
     if (!formData.first_name.trim()) {
       newErrors.first_name = 'First name is required';
     }
-    
+
     if (!formData.last_name.trim()) {
       newErrors.last_name = 'Last name is required';
     }
-    
+
     if (!formData.email.trim()) {
       newErrors.email = 'Email is required';
     } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email)) {
       newErrors.email = 'Please enter a valid email address';
     }
-    
+
     return newErrors;
   };
 
   const validatePasswordForm = () => {
     const newErrors = {};
-    
+
     if (!passwordData.current_password) {
       newErrors.current_password = 'Current password is required';
     }
-    
+
     if (!passwordData.new_password) {
       newErrors.new_password = 'New password is required';
     } else if (passwordData.new_password.length < 8) {
       newErrors.new_password = 'Password must be at least 8 characters';
     }
-    
+
     if (!passwordData.confirm_password) {
       newErrors.confirm_password = 'Please confirm your new password';
     } else if (passwordData.new_password !== passwordData.confirm_password) {
       newErrors.confirm_password = 'Passwords do not match';
     }
-    
+
     return newErrors;
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    
+
     const validationErrors = validateForm();
     if (Object.keys(validationErrors).length > 0) {
       setErrors(validationErrors);
       return;
     }
-    
+
     try {
       const result = await updateProfile({
         first_name: formData.first_name.trim(),
         last_name: formData.last_name.trim(),
         email: formData.email.trim(),
       });
-      
+
       if (result.success) {
         setSuccessMessage('Profile updated successfully');
         setIsEditing(false);
@@ -203,19 +203,19 @@ const Profile = () => {
 
   const handlePasswordSubmit = async (e) => {
     e.preventDefault();
-    
+
     const validationErrors = validatePasswordForm();
     if (Object.keys(validationErrors).length > 0) {
       setErrors(validationErrors);
       return;
     }
-    
+
     try {
       const result = await changePassword(
         passwordData.current_password,
         passwordData.new_password
       );
-      
+
       if (result.success) {
         setSuccessMessage(result.message || 'Password changed successfully');
         setChangingPassword(false);
@@ -244,7 +244,19 @@ const Profile = () => {
 
   return (
     <Container maxWidth="lg" sx={{ mt: 4, mb: 4 }}>
-      <Typography variant="h4" component="h1" gutterBottom>
+      <Typography
+        variant="h4"
+        component="h1"
+        gutterBottom
+        sx={{
+          fontWeight: 700,
+          background: 'linear-gradient(90deg, #ffffff 0%, #C77DFF 100%)',
+          WebkitBackgroundClip: 'text',
+          WebkitTextFillColor: 'transparent',
+          backgroundClip: 'text',
+          mb: 3,
+        }}
+      >
         My Profile
       </Typography>
 
@@ -263,9 +275,9 @@ const Profile = () => {
       <Grid container spacing={3}>
         {/* Profile Information */}
         <Grid item xs={12} md={8}>
-          <Paper sx={{ p: 3 }}>
+          <Paper elevation={0} sx={{ p: 3, borderRadius: 4 }}>
             <Box display="flex" justifyContent="space-between" alignItems="center" mb={3}>
-              <Typography variant="h6">
+              <Typography variant="h6" sx={{ fontWeight: 600 }}>
                 Personal Information
               </Typography>
               {!changingPassword && (
@@ -301,7 +313,7 @@ const Profile = () => {
                       }}
                     />
                   </Grid>
-                  
+
                   <Grid item xs={12} sm={6}>
                     <TextField
                       fullWidth
@@ -321,7 +333,7 @@ const Profile = () => {
                       }}
                     />
                   </Grid>
-                  
+
                   <Grid item xs={12}>
                     <TextField
                       fullWidth
@@ -341,7 +353,7 @@ const Profile = () => {
                       }}
                     />
                   </Grid>
-                  
+
                   <Grid item xs={12}>
                     <TextField
                       fullWidth
@@ -359,7 +371,7 @@ const Profile = () => {
                       helperText="Username cannot be changed"
                     />
                   </Grid>
-                  
+
                   {isEditing && (
                     <Grid item xs={12}>
                       <Box display="flex" justifyContent="flex-end" gap={2}>
@@ -404,9 +416,9 @@ const Profile = () => {
                         endAdornment: (
                           <InputAdornment position="end">
                             <IconButton
-                              onClick={() => setShowPasswords(prev => ({ 
-                                ...prev, 
-                                current: !prev.current 
+                              onClick={() => setShowPasswords(prev => ({
+                                ...prev,
+                                current: !prev.current
                               }))}
                               edge="end"
                             >
@@ -417,7 +429,7 @@ const Profile = () => {
                       }}
                     />
                   </Grid>
-                  
+
                   <Grid item xs={12}>
                     <TextField
                       fullWidth
@@ -437,9 +449,9 @@ const Profile = () => {
                         endAdornment: (
                           <InputAdornment position="end">
                             <IconButton
-                              onClick={() => setShowPasswords(prev => ({ 
-                                ...prev, 
-                                new: !prev.new 
+                              onClick={() => setShowPasswords(prev => ({
+                                ...prev,
+                                new: !prev.new
                               }))}
                               edge="end"
                             >
@@ -450,7 +462,7 @@ const Profile = () => {
                       }}
                     />
                   </Grid>
-                  
+
                   <Grid item xs={12}>
                     <TextField
                       fullWidth
@@ -470,9 +482,9 @@ const Profile = () => {
                         endAdornment: (
                           <InputAdornment position="end">
                             <IconButton
-                              onClick={() => setShowPasswords(prev => ({ 
-                                ...prev, 
-                                confirm: !prev.confirm 
+                              onClick={() => setShowPasswords(prev => ({
+                                ...prev,
+                                confirm: !prev.confirm
                               }))}
                               edge="end"
                             >
@@ -483,7 +495,7 @@ const Profile = () => {
                       }}
                     />
                   </Grid>
-                  
+
                   <Grid item xs={12}>
                     <Box display="flex" justifyContent="flex-end" gap={2}>
                       <Button
@@ -531,21 +543,24 @@ const Profile = () => {
         {/* Account Summary Sidebar */}
         <Grid item xs={12} md={4}>
           {/* User Card */}
-          <Card sx={{ mb: 3 }}>
-            <CardContent>
+          <Card elevation={0} sx={{ mb: 3, borderRadius: 4 }}>
+            <CardContent sx={{ p: 3 }}>
               <Box display="flex" flexDirection="column" alignItems="center">
                 <Avatar
-                  sx={{ 
-                    width: 80, 
-                    height: 80, 
-                    bgcolor: 'primary.main',
+                  sx={{
+                    width: 88,
+                    height: 88,
+                    background: 'linear-gradient(135deg, #C77DFF 0%, #9D4EDD 100%)',
                     fontSize: '2rem',
-                    mb: 2 
+                    fontWeight: 700,
+                    mb: 2,
+                    border: '3px solid rgba(255, 255, 255, 0.2)',
+                    boxShadow: '0 8px 24px rgba(157, 78, 221, 0.4)',
                   }}
                 >
                   {profileData?.first_name?.[0]}{profileData?.last_name?.[0]}
                 </Avatar>
-                <Typography variant="h6">
+                <Typography variant="h6" sx={{ fontWeight: 600 }}>
                   {profileData?.first_name} {profileData?.last_name}
                 </Typography>
                 <Typography variant="body2" color="text.secondary">
@@ -556,15 +571,15 @@ const Profile = () => {
                   label="Active Account"
                   color="success"
                   size="small"
-                  sx={{ mt: 1 }}
+                  sx={{ mt: 1.5 }}
                 />
               </Box>
             </CardContent>
           </Card>
 
           {/* Account Stats */}
-          <Paper sx={{ p: 2 }}>
-            <Typography variant="h6" gutterBottom>
+          <Paper elevation={0} sx={{ p: 2.5, borderRadius: 4 }}>
+            <Typography variant="h6" gutterBottom sx={{ fontWeight: 600 }}>
               Account Overview
             </Typography>
             <List>
@@ -572,61 +587,61 @@ const Profile = () => {
                 <ListItemIcon>
                   <CalendarMonth />
                 </ListItemIcon>
-                <ListItemText 
+                <ListItemText
                   primary="Member Since"
                   secondary={formatDate(profileData?.date_joined)}
                 />
               </ListItem>
-              
+
               <ListItem>
                 <ListItemIcon>
                   <Schedule />
                 </ListItemIcon>
-                <ListItemText 
+                <ListItemText
                   primary="Last Login"
                   secondary={profileData?.last_login ? formatDate(profileData.last_login) : 'N/A'}
                 />
               </ListItem>
-              
+
               {profileData?.financial_summary && (
                 <>
                   <Divider sx={{ my: 1 }} />
-                  
+
                   <ListItem>
                     <ListItemIcon>
                       <AttachMoney />
                     </ListItemIcon>
-                    <ListItemText 
+                    <ListItemText
                       primary="Net Worth"
                       secondary={formatCurrency(profileData.financial_summary.net_worth || 0)}
                     />
                   </ListItem>
-                  
+
                   <ListItem>
                     <ListItemIcon>
                       <TrendingUp />
                     </ListItemIcon>
-                    <ListItemText 
+                    <ListItemText
                       primary="Monthly Savings"
                       secondary={formatCurrency(profileData.financial_summary.monthly_savings || 0)}
                     />
                   </ListItem>
-                  
+
                   <ListItem>
                     <ListItemIcon>
                       <AccountBalance />
                     </ListItemIcon>
-                    <ListItemText 
+                    <ListItemText
                       primary="Total Accounts"
                       secondary={profileData.total_accounts || 0}
                     />
                   </ListItem>
-                  
+
                   <ListItem>
                     <ListItemIcon>
                       <Category />
                     </ListItemIcon>
-                    <ListItemText 
+                    <ListItemText
                       primary="Total Categories"
                       secondary={profileData.total_categories || 0}
                     />

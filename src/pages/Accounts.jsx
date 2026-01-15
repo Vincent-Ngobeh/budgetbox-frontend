@@ -43,20 +43,20 @@ import ConfirmDialog from '../components/common/ConfirmDialog';
 const Accounts = () => {
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
-  
+
   const [accounts, setAccounts] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [successMessage, setSuccessMessage] = useState('');
-  
+
   const [formDialogOpen, setFormDialogOpen] = useState(false);
   const [confirmDialogOpen, setConfirmDialogOpen] = useState(false);
   const [selectedAccount, setSelectedAccount] = useState(null);
   const [accountToDelete, setAccountToDelete] = useState(null);
-  
+
   const [filterType, setFilterType] = useState('all');
   const [filterStatus, setFilterStatus] = useState('active');
-  
+
   const [expandedCards, setExpandedCards] = useState({});
 
   useEffect(() => {
@@ -68,7 +68,7 @@ const Accounts = () => {
       setLoading(true);
       setError(null);
       const response = await accountService.getAccounts();
-      
+
       const transformedAccounts = response.results ? response.results : response;
       setAccounts(Array.isArray(transformedAccounts) ? transformedAccounts : []);
     } catch (err) {
@@ -122,7 +122,7 @@ const Accounts = () => {
         await accountService.createAccount(formData);
         setSuccessMessage('Account created successfully');
       }
-      
+
       setFormDialogOpen(false);
       fetchAccounts();
     } catch (err) {
@@ -166,10 +166,10 @@ const Accounts = () => {
 
   const MobileAccountCard = ({ account }) => {
     const isExpanded = expandedCards[account.bank_account_id];
-    
+
     return (
-      <Card sx={{ mb: 2 }}>
-        <CardContent>
+      <Card elevation={0} sx={{ mb: 2, borderRadius: 3 }}>
+        <CardContent sx={{ p: 2.5 }}>
           <Box display="flex" justifyContent="space-between" alignItems="flex-start" mb={1}>
             <Box>
               <Typography variant="h6" component="div">
@@ -183,9 +183,9 @@ const Accounts = () => {
               </Typography>
             </Box>
             <Box textAlign="right">
-              <Typography 
-                variant="h5" 
-                sx={{ 
+              <Typography
+                variant="h5"
+                sx={{
                   fontWeight: 'bold',
                   color: account.current_balance >= 0 ? 'success.main' : 'error.main',
                   mb: 0.5
@@ -201,7 +201,7 @@ const Accounts = () => {
               />
             </Box>
           </Box>
-          
+
           <Box display="flex" alignItems="center" justifyContent="space-between">
             <Chip
               icon={account.is_active ? <CheckCircle /> : <Block />}
@@ -210,20 +210,20 @@ const Accounts = () => {
               color={account.is_active ? 'success' : 'default'}
               variant="outlined"
             />
-            <IconButton 
-              size="small" 
+            <IconButton
+              size="small"
               onClick={() => toggleCardExpansion(account.bank_account_id)}
             >
               {isExpanded ? <ExpandLess /> : <ExpandMore />}
             </IconButton>
           </Box>
         </CardContent>
-        
+
         <Collapse in={isExpanded}>
           <Divider />
           <CardActions sx={{ justifyContent: 'flex-end' }}>
-            <Button 
-              size="small" 
+            <Button
+              size="small"
               startIcon={<EditIcon />}
               onClick={() => handleEditAccount(account)}
               disabled={!account.is_active}
@@ -231,8 +231,8 @@ const Accounts = () => {
               Edit
             </Button>
             {account.is_active && account.current_balance === 0 && (
-              <Button 
-                size="small" 
+              <Button
+                size="small"
                 color="warning"
                 startIcon={<Block />}
                 onClick={() => handleDeactivate(account)}
@@ -240,8 +240,8 @@ const Accounts = () => {
                 Deactivate
               </Button>
             )}
-            <Button 
-              size="small" 
+            <Button
+              size="small"
               color="error"
               startIcon={<DeleteIcon />}
               onClick={() => handleDeleteClick(account)}
@@ -273,7 +273,7 @@ const Accounts = () => {
       headerName: 'Type',
       width: 120,
       renderCell: (params) => (
-        <Chip 
+        <Chip
           label={formatAccountType(params.value)}
           size="small"
           color={params.value === 'credit' ? 'error' : 'primary'}
@@ -296,11 +296,11 @@ const Accounts = () => {
       headerName: 'Balance',
       width: 150,
       renderCell: (params) => (
-        <Typography 
-          variant="body2" 
-          sx={{ 
+        <Typography
+          variant="body2"
+          sx={{
             fontWeight: 'bold',
-            color: params.value >= 0 ? 'success.main' : 'error.main' 
+            color: params.value >= 0 ? 'success.main' : 'error.main'
           }}
         >
           {formatCurrency(params.value)}
@@ -366,19 +366,36 @@ const Accounts = () => {
   ];
 
   const SummaryCard = ({ type, data, icon, color }) => (
-    <Card sx={{ height: '100%' }}>
-      <CardContent sx={{ p: isMobile ? 1.5 : 2 }}>
-        <Box display="flex" alignItems="center" mb={1}>
+    <Card
+      elevation={0}
+      sx={{
+        height: '100%',
+        position: 'relative',
+        overflow: 'hidden',
+        '&::before': {
+          content: '""',
+          position: 'absolute',
+          top: 0,
+          left: 0,
+          right: 0,
+          height: '3px',
+          background: `linear-gradient(90deg, ${color === 'primary' ? '#9D4EDD' : color === 'success' ? '#00D9A5' : color === 'error' ? '#FF6B6B' : '#4CC9F0'} 0%, transparent 100%)`,
+        },
+      }}
+    >
+      <CardContent sx={{ p: isMobile ? 2 : 2.5 }}>
+        <Box display="flex" alignItems="center" mb={1.5}>
           {!isMobile && (
             <Box
               sx={{
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
-                width: 40,
-                height: 40,
-                borderRadius: 1,
-                bgcolor: `${color}.lighter`,
+                width: 44,
+                height: 44,
+                borderRadius: 2.5,
+                background: `linear-gradient(135deg, ${color === 'primary' ? 'rgba(157, 78, 221, 0.2)' : color === 'success' ? 'rgba(0, 217, 165, 0.2)' : color === 'error' ? 'rgba(255, 107, 107, 0.2)' : 'rgba(76, 201, 240, 0.2)'} 0%, transparent 100%)`,
+                border: `1px solid ${color === 'primary' ? 'rgba(157, 78, 221, 0.3)' : color === 'success' ? 'rgba(0, 217, 165, 0.3)' : color === 'error' ? 'rgba(255, 107, 107, 0.3)' : 'rgba(76, 201, 240, 0.3)'}`,
                 color: `${color}.main`,
                 mr: 2,
               }}
@@ -387,7 +404,7 @@ const Accounts = () => {
             </Box>
           )}
           <Box flexGrow={1}>
-            <Typography variant="body2" color="text.secondary" sx={{ fontSize: isMobile ? '0.75rem' : '0.875rem' }}>
+            <Typography variant="body2" color="text.secondary" sx={{ fontSize: isMobile ? '0.75rem' : '0.875rem', fontWeight: 500 }}>
               {formatAccountType(type)}
             </Typography>
             <Typography variant="caption" color="text.secondary">
@@ -395,7 +412,7 @@ const Accounts = () => {
             </Typography>
           </Box>
         </Box>
-        <Typography variant={isMobile ? "h6" : "h5"} fontWeight="bold" color={color + '.main'}>
+        <Typography variant={isMobile ? "h6" : "h5"} fontWeight="700" color={color + '.main'}>
           {formatCurrency(data.total)}
         </Typography>
       </CardContent>
@@ -415,8 +432,18 @@ const Accounts = () => {
   return (
     <Container maxWidth="lg" sx={{ mt: isMobile ? 2 : 4, mb: 4, px: isMobile ? 1 : 3 }}>
       {/* Page Header */}
-      <Box display="flex" flexDirection={isMobile ? 'column' : 'row'} justifyContent="space-between" alignItems={isMobile ? 'stretch' : 'center'} mb={3} gap={2}>
-        <Typography variant={isMobile ? "h5" : "h4"} component="h1">
+      <Box display="flex" flexDirection={isMobile ? 'column' : 'row'} justifyContent="space-between" alignItems={isMobile ? 'stretch' : 'center'} mb={4} gap={2}>
+        <Typography
+          variant={isMobile ? "h5" : "h4"}
+          component="h1"
+          sx={{
+            fontWeight: 700,
+            background: 'linear-gradient(90deg, #ffffff 0%, #C77DFF 100%)',
+            WebkitBackgroundClip: 'text',
+            WebkitTextFillColor: 'transparent',
+            backgroundClip: 'text',
+          }}
+        >
           Bank Accounts
         </Typography>
         <Box display="flex" gap={isMobile ? 1 : 2} flexDirection={isMobile ? 'column' : 'row'}>
@@ -496,7 +523,7 @@ const Accounts = () => {
       </Grid>
 
       {/* Filters */}
-      <Paper sx={{ p: isMobile ? 1 : 2, mb: 3 }}>
+      <Paper elevation={0} sx={{ p: isMobile ? 1.5 : 2.5, mb: 3, borderRadius: 3 }}>
         <Grid container spacing={isMobile ? 1 : 2} alignItems="center">
           <Grid item xs={12} sm={4} md={3}>
             <TextField
@@ -535,8 +562,8 @@ const Accounts = () => {
       {isMobile ? (
         <Box>
           {filteredAccounts.map(account => (
-            <MobileAccountCard 
-              key={account.bank_account_id} 
+            <MobileAccountCard
+              key={account.bank_account_id}
               account={account}
             />
           ))}
