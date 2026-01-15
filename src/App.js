@@ -64,7 +64,7 @@ const theme = createTheme({
       lighter: 'rgba(255, 179, 71, 0.15)',
     },
     background: {
-      default: 'transparent',
+      default: 'rgba(0, 0, 0, 0)',
       paper: 'rgba(255, 255, 255, 0.05)',
     },
     text: {
@@ -320,7 +320,7 @@ const theme = createTheme({
       styleOverrides: {
         root: {
           border: 'none',
-          background: 'transparent',
+          background: 'rgba(0, 0, 0, 0)',
           '& .MuiDataGrid-cell': {
             borderColor: 'rgba(255, 255, 255, 0.08)',
           },
